@@ -8,6 +8,8 @@ export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [error, setError] = useState(null);
   const [form, setForm] = useState({
     title: "", description: "", event_type: "event",
     start_date: "", end_date: "", time_details: "",
@@ -48,8 +50,18 @@ export default function EventsPage() {
   };
 
   const handleDelete = async (id) => {
-    await supabase.from("events").delete().eq("id", id);
-    await loadEvents();
+    if (deleteConfirm !== id) {
+      setDeleteConfirm(id);
+      setTimeout(() => setDeleteConfirm(null), 4000); // auto-cancel after 4s
+      return;
+    }
+    const { error: delErr } = await supabase.from("events").delete().eq("id", id);
+    if (delErr) {
+      setError("Failed to delete event. Please try again.");
+    } else {
+      await loadEvents();
+    }
+    setDeleteConfirm(null);
   };
 
   if (!business) return (
@@ -198,8 +210,15 @@ export default function EventsPage() {
                   {event.status === "active" ? "Live" : event.status}
                 </span>
                 <span className="px-3 py-1 rounded-full bg-gray-100 text-xs text-gray-500 capitalize">{event.event_type}</span>
-                <button onClick={() => handleDelete(event.id)} className="text-gray-400 hover:text-red-500 transition">
-                  <Trash2 size={16} />
+                <button
+                  onClick={() => handleDelete(event.id)}
+                  className={`transition text-sm font-medium px-2 py-1 rounded ${
+                    deleteConfirm === event.id
+                      ? "bg-red-500 text-white"
+                      : "text-gray-400 hover:text-red-500"
+                  }`}
+                >
+                  {deleteConfirm === event.id ? "Confirm?" : <Trash2 size={16} />}
                 </button>
               </div>
             </div>

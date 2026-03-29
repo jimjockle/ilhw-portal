@@ -14,27 +14,33 @@ export default function ClaimPage() {
   const [selected, setSelected] = useState(null);
   const [verifyMethod, setVerifyMethod] = useState("email");
   const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState(null);
 
   // If already claimed, redirect
   useEffect(() => {
     if (business?.claimed) router.push("/portal/dashboard");
-  }, [business]);
+  }, [business, router]);
 
   // Search businesses from dataset
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setSearching(true);
+    setError(null);
     try {
       const datasetUrl = process.env.NEXT_PUBLIC_DATASET_URL || "https://ilhw-chatbot.vercel.app/dataset.json";
       const res = await fetch(datasetUrl);
+      if (!res.ok) throw new Error(`Dataset unavailable (${res.status})`);
       const data = await res.json();
+      if (!data.businesses || !Array.isArray(data.businesses)) {
+        throw new Error("Invalid dataset format");
+      }
       const q = searchQuery.toLowerCase();
-      const matches = (data.businesses || [])
+      const matches = data.businesses
         .filter(b => b.name.toLowerCase().includes(q) || (b.address || "").toLowerCase().includes(q))
         .slice(0, 10);
       setResults(matches);
     } catch (err) {
-      console.error("Search failed:", err);
+      setError("Unable to search businesses right now. Please try again in a moment.");
     }
     setSearching(false);
   };
@@ -68,7 +74,7 @@ export default function ClaimPage() {
       .single();
 
     if (bizErr) {
-      console.error("Claim failed:", bizErr);
+      setError("Failed to claim this business. It may already be claimed by another user.");
       setVerifying(false);
       return;
     }
@@ -157,7 +163,13 @@ export default function ClaimPage() {
             </div>
           )}
 
-          {results.length === 0 && searchQuery && !searching && (
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          {results.length === 0 && searchQuery && !searching && !error && (
             <div className="text-center py-8 text-gray-400 text-sm">
               No businesses found. Try a different search term.
             </div>

@@ -1,13 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/use-auth";
-import { MapPin, Phone, Clock, Globe, Image, X, CheckCircle, Save, Edit3, Upload, Tag } from "lucide-react";
+import { validateBusinessForm, validateKeyword } from "@/lib/validation";
+import { MapPin, Phone, Clock, Globe, Image, X, CheckCircle, Save, Edit3, Upload, Tag, AlertCircle } from "lucide-react";
 
 export default function ListingPage() {
   const { business, supabase, refreshBusiness } = useAuth();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [form, setForm] = useState({
     name: "", address: "", phone: "", website: "", hours: "", description: "", keywords: [],
   });
@@ -29,32 +32,41 @@ export default function ListingPage() {
 
   const handleSave = async () => {
     if (!business) return;
-    setSaving(true);
-    const { error } = await supabase
-      .from("businesses")
-      .update({
-        name: form.name,
-        address: form.address,
-        phone: form.phone,
-        website: form.website,
-        hours: form.hours,
-        description: form.description,
-        keywords: form.keywords,
-      })
-      .eq("id", business.id);
+    setSaveError(null);
+    setFieldErrors({});
 
-    if (!error) {
-      await refreshBusiness();
-      setEditing(false);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+    // Validate all fields
+    const { valid, errors, sanitized } = validateBusinessForm(form);
+    if (!valid) {
+      setFieldErrors(errors);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("businesses")
+        .update(sanitized)
+        .eq("id", business.id);
+
+      if (error) {
+        setSaveError(`Failed to save changes: ${error.message}`);
+      } else {
+        await refreshBusiness();
+        setEditing(false);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } catch (err) {
+      setSaveError("Connection error. Please check your internet and try again.");
     }
     setSaving(false);
   };
 
   const addKeyword = () => {
-    if (newKeyword.trim() && !form.keywords.includes(newKeyword.trim())) {
-      setForm({ ...form, keywords: [...form.keywords, newKeyword.trim()] });
+    const { valid, value, error } = validateKeyword(newKeyword);
+    if (valid && !form.keywords.includes(value)) {
+      setForm({ ...form, keywords: [...form.keywords, value] });
       setNewKeyword("");
     }
   };
@@ -113,6 +125,15 @@ export default function ListingPage() {
         </div>
       </div>
 
+      {/* Error banner */}
+      {saveError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+          <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
+          <span className="text-sm text-red-700">{saveError}</span>
+          <button onClick={() => setSaveError(null)} className="ml-auto text-red-400 hover:text-red-600"><X size={14} /></button>
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-5">
         {/* Main content */}
         <div className="col-span-2 space-y-5">
@@ -142,11 +163,14 @@ export default function ListingPage() {
                     <span className="text-xs font-semibold text-gray-500">{label}</span>
                   </div>
                   {editing ? (
-                    <input
-                      value={form[key]}
-                      onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                      className="w-full text-sm text-gray-900 bg-transparent focus:outline-none"
-                    />
+                    <>
+                      <input
+                        value={form[key]}
+                        onChange={(e) => { setForm({ ...form, [key]: e.target.value }); setFieldErrors({ ...fieldErrors, [key]: null }); }}
+                        className={`w-full text-sm text-gray-900 bg-transparent focus:outline-none ${fieldErrors[key] ? "text-red-600" : ""}`}
+                      />
+                      {fieldErrors[key] && <p className="text-xs text-red-500 mt-1">{fieldErrors[key]}</p>}
+                    </>
                   ) : (
                     <div className="text-sm text-gray-900">{form[key] || "Not set"}</div>
                   )}
