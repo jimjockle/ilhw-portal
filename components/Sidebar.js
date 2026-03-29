@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3, Edit3, Eye, Calendar, TrendingUp, Mail, Zap, Settings, Lock, LogOut
+  BarChart3, Edit3, Eye, Calendar, Camera, TrendingUp, Mail, Zap, Settings, Lock, LogOut
 } from "lucide-react";
 
 const TIER_ORDER = { free: 0, business: 1, pro: 2, enterprise: 3 };
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { path: "/portal/listing", icon: Edit3, label: "Listing Manager", minTier: "free" },
   { path: "/portal/preview", icon: Eye, label: "Chatbot Preview", minTier: "business" },
   { path: "/portal/events", icon: Calendar, label: "Events & Promos", minTier: "business" },
+  { path: "/portal/intake", icon: Camera, label: "Photo Intake", minTier: "free" },
   { path: "/portal/analytics", icon: TrendingUp, label: "Analytics", minTier: "pro" },
   { path: "/portal/newsletter", icon: Mail, label: "Newsletter Hub", minTier: "pro" },
   { path: "/portal/intelligence", icon: Zap, label: "Market Intel", minTier: "enterprise" },
