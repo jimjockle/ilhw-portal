@@ -31,12 +31,17 @@ export default function ClaimPage() {
       const res = await fetch(datasetUrl);
       if (!res.ok) throw new Error(`Dataset unavailable (${res.status})`);
       const data = await res.json();
-      if (!data.businesses || !Array.isArray(data.businesses)) {
-        throw new Error("Invalid dataset format");
+      const businesses = Array.isArray(data) ? data : data.businesses || data.data || [];
+      if (!businesses.length) {
+        throw new Error("No businesses found in dataset");
       }
       const q = searchQuery.toLowerCase();
-      const matches = data.businesses
-        .filter(b => b.name.toLowerCase().includes(q) || (b.address || "").toLowerCase().includes(q))
+      const matches = businesses
+        .filter(b => {
+          const name = (b.name || b.business_name || "").toLowerCase();
+          const addr = (b.address || b.full_address || "").toLowerCase();
+          return name.includes(q) || addr.includes(q);
+        })
         .slice(0, 10);
       setResults(matches);
     } catch (err) {
