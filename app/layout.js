@@ -2,7 +2,16 @@ import "./globals.css";
 
 export const metadata = {
   title: "I Live Here Westchester — Business Portal",
-  description: "Manage your business listing on I Live Here Westchester",
+  description: "Claim and manage your business listing on I Live Here Westchester. Control how the chatbot represents your business to the community.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "I Live Here Westchester — Business Portal",
+    description: "See how your business appears to Westchester residents. Claim your listing and take control.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }) {

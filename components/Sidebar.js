@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   BarChart3, Edit3, Eye, Calendar, Camera, TrendingUp, Mail, Zap, Settings, Lock, LogOut
 } from "lucide-react";
@@ -27,9 +28,14 @@ export default function Sidebar({ business, onSignOut }) {
   return (
     <aside className="w-60 bg-brand-navy min-h-screen flex flex-col fixed left-0 top-0">
       {/* Logo */}
-      <div className="px-5 py-6 border-b border-white/10">
-        <div className="text-white text-lg font-extrabold tracking-tight">I LIVE HERE</div>
-        <div className="text-brand-gold text-[11px] font-semibold tracking-[3px]">BUSINESS PORTAL</div>
+      <div className="px-5 py-5 border-b border-white/10">
+        <div className="flex items-center gap-2.5">
+          <Image src="/logo-white.png" alt="I Live Here" width={34} height={34} className="flex-shrink-0" />
+          <div>
+            <div className="text-white text-base font-extrabold tracking-tight leading-none">I LIVE HERE</div>
+            <div className="text-brand-gold text-[9px] font-semibold tracking-[2.5px] mt-0.5">BUSINESS PORTAL</div>
+          </div>
+        </div>
       </div>
 
       {/* Nav */}
